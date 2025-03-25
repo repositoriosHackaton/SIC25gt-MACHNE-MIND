@@ -1,6 +1,6 @@
 # CryptoVision Analytics
 
-![Banner de CryptoVision](./images/dashboard.png) *(Reemplazar con imagen real del dashboard)*
+![Banner de CryptoVision](./images/dashboard.png)
 
 ## 🌟 Plataforma Inteligente de Análisis Cripto
 
