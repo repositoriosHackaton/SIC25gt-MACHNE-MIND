@@ -6,8 +6,6 @@
 
 **CryptoVision** es una solución completa que combina visualización de datos con inteligencia artificial para ofrecer insights accionables sobre el mercado de criptomonedas.
 
-![Dashboard](./images/dashboard.png)
-
 
 ### 🔍 Características Clave
 
