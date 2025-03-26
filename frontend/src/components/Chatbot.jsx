@@ -1,74 +1,125 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiMessageSquare, FiSend, FiX } from 'react-icons/fi';
-import { FaRobot } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiMessageSquare, FiSend, FiX } from "react-icons/fi";
+import { FaRobot } from "react-icons/fa";
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showButton, setShowButton] = useState(true);
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: '¡Hola! Soy tu asistente de criptomonedas. ¿En qué puedo ayudarte hoy?',
-      sender: 'bot',
+      text: "¡Hola! Soy tu asistente de criptomonedas. ¿En qué puedo ayudarte hoy?",
+      sender: "bot",
       timestamp: new Date(),
     },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  // Mensajes de prueba estáticos
-  const mockResponses = [
-    "El precio de Bitcoin está actualmente en $42,380 con una tendencia alcista.",
-    "Ethereum ha mostrado un crecimiento del 5.2% en las últimas 24 horas.",
-    "Puedo mostrarte gráficos históricos de cualquier criptomoneda que necesites.",
-    "¿Te interesa conocer las últimas noticias del mercado crypto?",
-    "El volumen de trading en Binance ha aumentado un 15% esta semana."
-  ];
+  const handleOpenChat = () => {
+    setShowButton(false);
+    setIsOpen(true);
+  };
 
-  const handleSendMessage = (e) => {
+  const handleCloseChat = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      setShowButton(true);
+    }, 500);
+  };
+
+  const fetchBotResponse = async (question) => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/crypto/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error en la respuesta de la API");
+      }
+
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error("Error al obtener respuesta del bot:", error);
+      return "Lo siento, hubo un error al procesar tu solicitud. Por favor intenta nuevamente.";
+    }
+  };
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (inputValue.trim() === '') return;
+    if (inputValue.trim() === "") return;
 
-    // Mensaje del usuario
     const newUserMessage = {
       id: Date.now(),
       text: inputValue,
-      sender: 'user',
+      sender: "user",
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, newUserMessage]);
-    setInputValue('');
+    setMessages((prev) => [...prev, newUserMessage]);
+    setInputValue("");
+
+    const typingMessage = {
+      id: "typing-msg",
+      text: "escribiendo...",
+      sender: "bot",
+      isTyping: true,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, typingMessage]);
     setIsTyping(true);
 
-    // Limpiar timeout anterior si existe
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Simular respuesta del backend
-    typingTimeoutRef.current = setTimeout(() => {
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        text: randomResponse,
-        sender: 'bot',
-        timestamp: new Date(),
-      }]);
+    try {
+      const botResponse = await fetchBotResponse(inputValue);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === "typing-msg"
+            ? {
+                id: Date.now() + 1,
+                text: botResponse,
+                sender: "bot",
+                timestamp: new Date(),
+              }
+            : msg
+        )
+      );
+    } catch (error) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === "typing-msg"
+            ? {
+                id: Date.now() + 1,
+                text: "Lo siento, ocurrió un error al procesar tu solicitud.",
+                sender: "bot",
+                timestamp: new Date(),
+              }
+            : msg
+        )
+      );
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
-  // Auto-scroll al recibir nuevos mensajes
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Limpiar timeout al desmontar
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
@@ -77,46 +128,42 @@ const Chatbot = () => {
     };
   }, []);
 
-  // Animaciones
   const chatVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
       scale: 1,
-      transition: { 
-        type: 'spring',
-        stiffness: 300,
-        damping: 20
-      }
-    }
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+      },
+    },
   };
 
   const messageVariants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Botón flotante */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            onClick={() => setIsOpen(true)}
-            className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-full p-4 shadow-xl"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
-            <FiMessageSquare className="text-2xl" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {showButton && (
+        <motion.button
+          onClick={handleOpenChat}
+          className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-full p-4 shadow-xl"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.3,
+          }}
+        >
+          <FiMessageSquare className="text-2xl" />
+        </motion.button>
+      )}
 
-      {/* Ventana del chat */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -126,13 +173,12 @@ const Chatbot = () => {
             exit="hidden"
             variants={chatVariants}
           >
-            {/* Encabezado con degradado */}
             <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 p-4 text-white flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <motion.div
-                  animate={{ 
+                  animate={{
                     rotate: [0, 10, -10, 0],
-                    transition: { repeat: Infinity, duration: 3 }
+                    transition: { repeat: Infinity, duration: 3 },
                   }}
                 >
                   <FaRobot className="text-xl" />
@@ -140,15 +186,14 @@ const Chatbot = () => {
                 <h3 className="font-semibold">Asistente Cripto</h3>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={handleCloseChat}
                 className="text-white hover:text-gray-200"
               >
                 <FiX className="text-xl" />
               </button>
             </div>
 
-            {/* Área de mensajes con scroll */}
-            <div 
+            <div
               ref={messagesContainerRef}
               className="flex-1 p-4 overflow-y-auto bg-gradient-to-b from-gray-50 to-gray-100"
             >
@@ -156,46 +201,57 @@ const Chatbot = () => {
                 {messages.map((message) => (
                   <motion.div
                     key={message.id}
-                    className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`mb-4 flex ${
+                      message.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                     variants={messageVariants}
                     initial="hidden"
                     animate="visible"
+                    transition={{ duration: 0.2 }}
                   >
                     <div
                       className={`max-w-[80%] rounded-lg p-3 break-words ${
-                        message.sender === 'user' 
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none' 
-                          : 'bg-white text-gray-800 rounded-bl-none shadow'
+                        message.sender === "user"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-none"
+                          : "bg-white text-gray-800 rounded-bl-none shadow"
                       }`}
                     >
-                      <p className="text-sm">{message.text}</p>
+                      {message.isTyping ? (
+                        <div className="flex items-center">
+                          <div className="flex space-x-1 mr-2">
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "0ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "150ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "300ms" }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {message.text}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-line">
+                          {message.text}
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 ))}
-                {isTyping && (
-                  <motion.div 
-                    className="flex justify-start mb-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="bg-white text-gray-800 rounded-lg rounded-bl-none shadow p-3 flex items-center">
-                      <div className="flex space-x-1 mr-2">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                      </div>
-                      <span className="text-xs text-gray-500">escribiendo...</span>
-                    </div>
-                  </motion.div>
-                )}
                 <div ref={messagesEndRef} />
               </AnimatePresence>
             </div>
 
-            {/* Área de entrada */}
-            <form 
-              onSubmit={handleSendMessage} 
+            <form
+              onSubmit={handleSendMessage}
               className="border-t border-gray-200 p-3 bg-white"
             >
               <div className="flex items-center">

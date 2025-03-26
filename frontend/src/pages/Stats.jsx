@@ -1,32 +1,78 @@
 import React, { useState, useEffect } from "react";
-import { fetchStats, fetchVolatilityStats } from "../services/api"; // Nuevas funciones para obtener las estadísticas de volatilidad
-import { BsCalendarDate } from "react-icons/bs"; // Icono para el selector de año
-import { Line } from "react-chartjs-2"; // Importar Line Chart de react-chartjs-2
+import { fetchStats, fetchVolatilityStats } from "../services/api";
+import { BsCalendarDate } from "react-icons/bs";
+import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
-import { FaSpinner } from "react-icons/fa"; // Importar spinner de react-icons
+import { FaSpinner, FaExclamationTriangle } from "react-icons/fa";
 import Footer from "../components/Footer";
+import Chatbot from "../components/Chatbot";
 
-// Registrar los componentes necesarios de Chart.js
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Stats = () => {
-  const [year, setYear] = useState("2020"); // Año por defecto
+  const [year, setYear] = useState("2020");
   const [stats, setStats] = useState(null);
-  const [volatilityStats, setVolatilityStats] = useState(null); // Estado para almacenar las criptos más volátiles y estables
+  const [volatilityStats, setVolatilityStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Obtener las estadísticas de precio global y top cryptos para el año seleccionado
+  // Obtener las estadísticas
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const statsResponse = await fetchStats(year); // Pasamos el año para filtrar las estadísticas
-      const volatilityResponse = await fetchVolatilityStats(year); // Igualmente para la volatilidad
-      setStats(statsResponse.data);
-      setVolatilityStats(volatilityResponse.data);
-      setLoading(false);
+      setError(null);
+      try {
+        const [statsResponse, volatilityResponse] = await Promise.all([
+          fetchStats(year),
+          fetchVolatilityStats(year)
+        ]);
+
+        if (!statsResponse?.data || !volatilityResponse?.data) {
+          throw new Error("No se pudieron obtener los datos estadísticos");
+        }
+
+        setStats(statsResponse.data);
+        setVolatilityStats(volatilityResponse.data);
+      } catch (err) {
+        console.error("Error al cargar estadísticas:", err);
+        setError(err.message || "Error al cargar las estadísticas");
+        setStats(null);
+        setVolatilityStats(null);
+      } finally {
+        setLoading(false);
+      }
     };
+    
     fetchData();
-  }, [year]); // Dependencia en el año para volver a obtener los datos cuando cambie
+  }, [year]);
+
+  const generateChartData = (data) => {
+    if (!data || !Array.isArray(data)) return { labels: [], datasets: [] };
+    
+    const chartLabels = data.map((point) => point.date);
+    const chartData = data.map((point) => point.price);
+
+    return {
+      labels: chartLabels,
+      datasets: [
+        {
+          label: "Precio",
+          data: chartData,
+          fill: true,
+          borderColor: "rgba(255, 255, 255, 0.8)",
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 1,
+        },
+      ],
+    };
+  };
+
+  const formatCurrency = (value) => {
+    if (typeof value !== "number") return "N/A";
+    return value.toFixed(2).replace(".", ",");
+  };
 
   if (loading) {
     return (
@@ -36,31 +82,29 @@ const Stats = () => {
     );
   }
 
-  const generateChartData = (data) => {
-    const chartLabels = data.map((point) => point.date); // Las fechas serán las etiquetas de la gráfica
-    const chartData = data.map((point) => point.price); // Los precios serán los datos de la gráfica
+  if (error) {
+    return (
+      <div className="col-span-full flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-md">
+          <FaExclamationTriangle className="text-4xl text-yellow-500 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">Error al cargar los datos</h3>
+          <p className="text-gray-600 text-center">{error}</p>
+        </div>
+    );
+  }
 
-    return {
-      labels: chartLabels,
-      datasets: [
-        {
-          label: "Precio",
-          data: chartData,
-          fill: true, // Rellenar el área bajo la línea
-          borderColor: "rgba(255, 255, 255, 0.8)", // Borde blanco semi-transparente
-          backgroundColor: "rgba(255, 255, 255, 0.2)", // Fondo blanco semi-transparente
-          tension: 0.4, // Curva más suave
-          borderWidth: 2,
-          pointRadius: 1,
-        },
-      ],
-    };
-  };
-
-  // Función para dar formato a los números monetarios
-  const formatCurrency = (value) => {
-    return value.toFixed(2).replace(".", ","); // Reemplazamos el punto por la coma
-  };
+  if (!stats || !volatilityStats) {
+    return (
+      <div className="py-12 px-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div className="max-w-4xl mx-auto text-center p-8 bg-yellow-100 rounded-lg">
+          <h1 className="text-3xl font-bold text-yellow-600 mb-4">Datos no disponibles</h1>
+          <p className="text-xl text-yellow-800">
+            No se encontraron estadísticas para el año seleccionado.
+          </p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 px-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -76,7 +120,7 @@ const Stats = () => {
           <select
             className="bg-transparent p-3 text-lg text-white font-semibold rounded-md focus:outline-none appearance-none"
             value={year}
-            onChange={(e) => setYear(e.target.value)} // Cambiar año al seleccionar
+            onChange={(e) => setYear(e.target.value)}
           >
             {["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024"].map((yr) => (
               <option key={yr} value={yr} className="bg-gray-900 text-white">
@@ -105,7 +149,7 @@ const Stats = () => {
         <div className="bg-gradient-to-r from-green-500 to-teal-500 p-6 rounded-lg shadow-lg">
           <h2 className="text-2xl text-white font-semibold mb-4">Criptomoneda con Menor Desviación Estándar</h2>
           <p className="text-xl text-white">
-            <strong>{stats.lowest_std_dev_coin.coin_name}</strong> con una desviación estándar de <strong>{stats.lowest_std_dev_coin.std_dev}</strong>
+            <strong>{stats.lowest_std_dev_coin?.coin_name || "N/A"}</strong> con una desviación estándar de <strong>{stats.lowest_std_dev_coin?.std_dev || "N/A"}</strong>
           </p>
         </div>
       </div>
@@ -118,9 +162,8 @@ const Stats = () => {
             Criptomoneda Más Estable del Año
           </h2>
           <div className="bg-gradient-to-r from-teal-500 to-green-500 p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl text-white font-semibold mb-4">{volatilityStats.most_stable_coin.coin_name}</h3>
-            <p className="text-white mb-4">Desviación Estándar: {volatilityStats.most_stable_coin.std_dev}</p>
-            {/* Gráfico de la moneda estable */}
+            <h3 className="text-xl text-white font-semibold mb-4">{volatilityStats.most_stable_coin?.coin_name || "N/A"}</h3>
+            <p className="text-white mb-4">Desviación Estándar: {volatilityStats.most_stable_coin?.std_dev || "N/A"}</p>
             <div className="h-80">
               <Line
                 data={generateChartData(volatilityStats.stable_coin_data)}
@@ -163,9 +206,8 @@ const Stats = () => {
             Criptomoneda Más Volátil del Año
           </h2>
           <div className="bg-gradient-to-r from-red-500 to-yellow-500 p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl text-white font-semibold mb-4">{volatilityStats.most_volatile_coin.coin_name}</h3>
-            <p className="text-white mb-4">Desviación Estándar: {volatilityStats.most_volatile_coin.std_dev}</p>
-            {/* Gráfico de la moneda volátil */}
+            <h3 className="text-xl text-white font-semibold mb-4">{volatilityStats.most_volatile_coin?.coin_name || "N/A"}</h3>
+            <p className="text-white mb-4">Desviación Estándar: {volatilityStats.most_volatile_coin?.std_dev || "N/A"}</p>
             <div className="h-80">
               <Line
                 data={generateChartData(volatilityStats.volatile_coin_data)}
@@ -209,54 +251,60 @@ const Stats = () => {
           Criptomonedas por Encima de la Media Global
         </h2>
 
-        {/* Grid de criptomonedas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {stats.top_cryptos.map((crypto, index) => (
-            <div
-              key={index}
-              className="p-6 rounded-xl shadow-lg transition-transform duration-500 ease-in-out hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-cyan-400 to-sky-500" // Azul más bonito
-            >
-              <h3 className="text-2xl font-semibold text-white mb-3 text-center">{crypto.coin_name}</h3>
-              <p className="text-white text-sm mb-4 text-center">Media de precio: {formatCurrency(crypto.mean_price)} USD</p>
-              <div className="h-64"> {/* Ajusté el tamaño de la gráfica */}
-                <Line
-                  data={generateChartData(crypto.data)}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      tooltip: {
-                        backgroundColor: "rgba(0,0,0,0.7)",
-                        titleColor: "#fff",
-                        bodyColor: "#fff",
-                      },
-                      legend: {
-                        display: false,
-                      },
-                    },
-                    scales: {
-                      x: {
-                        grid: { display: false },
-                        ticks: {
-                          color: "#fff",
+        {stats.top_cryptos?.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {stats.top_cryptos.map((crypto, index) => (
+              <div
+                key={index}
+                className="p-6 rounded-xl shadow-lg transition-transform duration-500 ease-in-out hover:scale-105 hover:shadow-2xl bg-gradient-to-br from-cyan-400 to-sky-500"
+              >
+                <h3 className="text-2xl font-semibold text-white mb-3 text-center">{crypto.coin_name || "N/A"}</h3>
+                <p className="text-white text-sm mb-4 text-center">Media de precio: {formatCurrency(crypto.mean_price)} USD</p>
+                <div className="h-64">
+                  <Line
+                    data={generateChartData(crypto.data)}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        tooltip: {
+                          backgroundColor: "rgba(0,0,0,0.7)",
+                          titleColor: "#fff",
+                          bodyColor: "#fff",
+                        },
+                        legend: {
+                          display: false,
                         },
                       },
-                      y: {
-                        grid: { display: false },
-                        ticks: {
-                          color: "#fff",
+                      scales: {
+                        x: {
+                          grid: { display: false },
+                          ticks: {
+                            color: "#fff",
+                          },
+                        },
+                        y: {
+                          grid: { display: false },
+                          ticks: {
+                            color: "#fff",
+                          },
                         },
                       },
-                    },
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-6 bg-yellow-100 rounded-lg">
+            <p className="text-yellow-800 text-xl">No hay criptomonedas por encima de la media para este año</p>
+          </div>
+        )}
       </div>
 
-      {/* Footer */}
+      <Chatbot />
+
       <Footer />
     </div>
   );

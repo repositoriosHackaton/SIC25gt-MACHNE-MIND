@@ -1,0 +1,102 @@
+{
+    "intents": [
+        {
+            "tag": "price_query",
+            "patterns": [
+                "Cómo está el bitcoin",
+                "Qué precio tiene ethereum",
+                "Dime el valor de cardano",
+                "Cuánto vale solana",
+                "Precio actual de X",
+                "Cómo va X hoy",
+                "Valor actual de X",
+                "A cómo está X",
+                "Precio de X en este momento",
+                "Cotización de X",
+                "Qué vale X",
+                "Dame el precio de X",
+                "Cuál es el valor de X",
+                "Cómo está X en el mercado",
+                "Precio actual del X"
+            ],
+            "context": ["coin_name"],
+            "responses": [
+                "El precio actual de {crypto} es {price}",
+                "Actualmente {crypto} está en {price}",
+                "{crypto} cotiza a {price} según los últimos datos"
+            ]
+        },
+        {
+            "tag": "buy_recommendation",
+            "patterns": [
+                "Recomiendas comprar bitcoin",
+                "Debería invertir en ethereum",
+                "Es buen momento para comprar X",
+                "Conviene comprar X ahora",
+                "Qué opinas de comprar X",
+                "Debería comprar X hoy",
+                "Es recomendable invertir en X",
+                "Merece la pena comprar X",
+                "Crees que subirá X",
+                "Vale la pena X ahora",
+                "Es buen precio para X",
+                "Compro X en este momento",
+                "Es momento de entrar en X",
+                "Invierto en X ahora?"
+            ],
+            "context": ["coin_name"],
+            "responses": [
+                "Mi análisis sugiere {recommendation} comprar {crypto} porque {reason}",
+                "Actualmente {recommendation} comprar {crypto} debido a {reason}",
+                "Según los datos: {recommendation} invertir en {crypto}. Razón: {reason}"
+            ]
+        },
+        {
+            "tag": "top_recommendation",
+            "patterns": [
+                "Qué criptomonedas recomiendas",
+                "Cuáles son las mejores para invertir",
+                "En qué debería invertir",
+                "Dame recomendaciones de cripto",
+                "Top criptomonedas este año",
+                "Qué cripto comprar ahora",
+                "Cuáles criptomonedas tienen mejor proyección",
+                "Recomiéndame criptomonedas",
+                "Qué monedas digitales son buenas",
+                "Cuáles son las cripto más prometedoras",
+                "En qué cripto invertir este mes",
+                "Lista de criptomonedas recomendadas",
+                "Top 5 criptomonedas"
+            ],
+            "responses": [
+                "Basado en el análisis con K-Means y ARIMA, recomiendo: {top_list}. Razones: {reasons}",
+                "Las criptomonedas más interesantes actualmente son: {top_list}",
+                "Según el modelo predictivo, considera: {top_list}"
+            ]
+        },
+        {
+            "tag": "volatility_query",
+            "patterns": [
+                "Qué criptomonedas son más volátiles",
+                "Cuáles son las monedas más estables",
+                "Dime las cripto con mayor volatilidad",
+                "Qué monedas tienen menos fluctuaciones",
+                "Most volatile cryptos",
+                "Criptomonedas estables este año",
+                "Ranking de volatilidad cripto",
+                "Monedas digitales más seguras"
+            ],
+            "responses": [
+                "Análisis de volatilidad: {volatility_report}",
+                "Según los datos: {volatility_report}",
+                "Reporte de estabilidad: {volatility_report}"
+            ]
+        }
+    ],
+    "failure_phrases": [
+        "No entendí tu pregunta sobre criptomonedas",
+        "Podrías reformular tu consulta sobre cripto?",
+        "No tengo información sobre ese tema",
+        "Mi especialidad es análisis de criptomonedas, reformula por favor"
+    ]
+}

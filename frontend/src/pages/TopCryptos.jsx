@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { fetchTopCryptosByYear } from "../services/api"; // Función para obtener las criptomonedas más interesantes por año
-import { BsCalendarDate } from "react-icons/bs"; // Icono para el selector de año
-import { Line } from "react-chartjs-2"; // Usamos Chart.js para las gráficas
+import { fetchTopCryptosByYear } from "../services/api";
+import { BsCalendarDate } from "react-icons/bs";
+import { Line } from "react-chartjs-2";
 import {
   FaBitcoin,
   FaEthereum,
   FaDollarSign,
   FaMoneyBillWave,
-} from "react-icons/fa"; // Iconos relacionados con dinero
-import { FaSpinner } from "react-icons/fa"; // Icono de carga
+} from "react-icons/fa";
+import { FaSpinner, FaExclamationTriangle } from "react-icons/fa";
 import Footer from "../components/Footer";
+import Chatbot from "../components/Chatbot";
 
-// Nuevos gradientes para las tarjetas
 const gradients = [
   "from-green-400 to-blue-500",
   "from-pink-400 to-yellow-500",
@@ -19,7 +19,6 @@ const gradients = [
   "from-teal-500 to-cyan-500",
 ];
 
-// Iconos fijos
 const icons = [
   <FaBitcoin className="text-4xl text-yellow-500" />,
   <FaEthereum className="text-4xl text-purple-500" />,
@@ -28,25 +27,40 @@ const icons = [
 ];
 
 const TopCryptos = () => {
-  const [year, setYear] = useState("2020"); // Año por defecto
+  const [year, setYear] = useState("2020");
   const [topCryptos, setTopCryptos] = useState([]);
-  const [loading, setLoading] = useState(true); // Estado de carga
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Obtener las criptomonedas top para el año seleccionado
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // Comienza la carga
-      const response = await fetchTopCryptosByYear(year);
-      setTopCryptos(response.data.top_cryptos); // Asumimos que la respuesta tiene un atributo `top_cryptos`
-      setLoading(false); // Termina la carga
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetchTopCryptosByYear(year);
+        
+        if (!response?.data?.top_cryptos) {
+          throw new Error("No se encontraron datos para el año seleccionado");
+        }
+        
+        setTopCryptos(response.data.top_cryptos);
+      } catch (err) {
+        console.error("Error al obtener datos:", err);
+        setError(err.message || "Ocurrió un error al cargar los datos");
+        setTopCryptos([]);
+      } finally {
+        setLoading(false);
+      }
     };
+    
     fetchData();
   }, [year]);
 
-  // Función para obtener los datos de la gráfica
   const getChartData = (data) => {
-    const chartLabels = data.map((point) => point.date); // Las fechas serán las etiquetas de la gráfica
-    const chartData = data.map((point) => point.price); // Los precios serán los datos de la gráfica
+    if (!data) return { labels: [], datasets: [] };
+    
+    const chartLabels = data.map((point) => point.date);
+    const chartData = data.map((point) => point.price);
 
     return {
       labels: chartLabels,
@@ -54,10 +68,10 @@ const TopCryptos = () => {
         {
           label: "Precio",
           data: chartData,
-          fill: true, // Rellenar el área bajo la línea
-          borderColor: "rgba(255, 255, 255, 0.8)", // Borde blanco semi-transparente
-          backgroundColor: "rgba(255, 255, 255, 0.2)", // Fondo blanco semi-transparente
-          tension: 0.4, // Curva más suave
+          fill: true,
+          borderColor: "rgba(255, 255, 255, 0.8)",
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          tension: 0.4,
           borderWidth: 2,
           pointRadius: 1,
         },
@@ -67,12 +81,10 @@ const TopCryptos = () => {
 
   return (
     <div className="py-12 px-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
-      {/* Título */}
       <h1 className="text-4xl font-extrabold text-center text-gray-800 mb-6">
         Las 4 Criptomonedas Más Interesantes en el Año {year}
       </h1>
 
-      {/* Explicación sobre la selección con IA */}
       <div className="max-w-2xl mx-auto text-center text-gray-600 mb-12">
         <p className="text-lg">
           Estas criptomonedas fueron seleccionadas mediante un análisis de{" "}
@@ -80,12 +92,10 @@ const TopCryptos = () => {
             Inteligencia Artificial
           </span>{" "}
           que evaluó su destacada variación en el precio, volumen de
-          transacciones y capitalización de mercado. Son las más interesantes
-          del año por su crecimiento y estabilidad en estos aspectos clave.
+          transacciones y capitalización de mercado.
         </p>
       </div>
 
-      {/* Filtro de Año */}
       <div className="flex justify-center mb-12">
         <div className="flex items-center border-2 border-blue-600 rounded-lg p-2 bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg">
           <BsCalendarDate className="text-white text-2xl mr-3" />
@@ -117,22 +127,27 @@ const TopCryptos = () => {
         </div>
       </div>
 
-      {/* Listado de Criptomonedas y sus Gráficas en un grid 2x2 */}
+      {/* Contenido principal con manejo de estados */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {loading ? (
           <div className="col-span-2 flex justify-center items-center">
             <FaSpinner className="text-4xl text-blue-500 animate-spin" />
           </div>
-        ) : (
+        ) : error ? (
+          <div className="col-span-full flex flex-col items-center justify-center p-8 bg-white rounded-lg shadow-md">
+                    <FaExclamationTriangle className="text-4xl text-yellow-500 mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Error al cargar los datos</h3>
+                    <p className="text-gray-600 text-center">{error}</p>
+                  </div>
+        ) : topCryptos?.length > 0 ? (
           topCryptos.map((crypto, index) => (
             <div
               key={index}
               className={`bg-gradient-to-br ${gradients[index]} p-6 rounded-xl shadow-xl transform hover:scale-105 hover:shadow-2xl transition duration-500 ease-in-out`}
             >
-              {/* Icono o imagen de criptomoneda */}
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                  {icons[index]} {/* Icono fijo según el índice */}
+                  {icons[index]}
                 </div>
               </div>
 
@@ -140,7 +155,6 @@ const TopCryptos = () => {
                 {crypto.coin_name}
               </h2>
 
-              {/* Gráfica */}
               <div className="h-64">
                 <Line
                   data={getChartData(crypto.data)}
@@ -180,10 +194,15 @@ const TopCryptos = () => {
               </div>
             </div>
           ))
+        ) : (
+          <div className="col-span-2 text-center p-8 bg-yellow-50 rounded-xl">
+            <h2 className="text-2xl font-bold text-yellow-600 mb-4">Sin datos</h2>
+            <p className="text-yellow-700">No se encontraron criptomonedas para el año seleccionado</p>
+          </div>
         )}
       </div>
 
-      {/* Pie de Página */}
+      <Chatbot />
       <Footer />
     </div>
   );

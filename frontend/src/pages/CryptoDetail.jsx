@@ -8,6 +8,7 @@ import { FiTrendingUp, FiTrendingDown, FiDatabase } from "react-icons/fi";
 import { MdDateRange } from "react-icons/md";
 import { FaCoins } from "react-icons/fa";
 import Footer from "../components/Footer";
+import Chatbot from "../components/Chatbot";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -287,6 +288,8 @@ const CryptoDetail = () => {
       {data == null && !loading && (
         <div className="text-center text-gray-600 text-xl">No hay información para los datos ingresados.</div>
       )}
+
+      <Chatbot />
 
       <Footer />
     </div>

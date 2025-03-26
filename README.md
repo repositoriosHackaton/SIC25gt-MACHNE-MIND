@@ -4,34 +4,61 @@
 
 ## 🌟 Plataforma Inteligente de Análisis Cripto
 
-**CryptoVision** es una solución innovadora que combina visualización de datos con inteligencia artificial para ofrecer insights accionables sobre el mercado de criptomonedas.
+**CryptoVision** es una solución completa que combina visualización de datos con inteligencia artificial para ofrecer insights accionables sobre el mercado de criptomonedas.
+
+![Dashboard](./images/dashboard.png)
+
 
 ### 🔍 Características Clave
 
-#### 📈 Dashboard Interactivo
-- Visualización avanzada de datos históricos y en tiempo real
-- Gráficos indicadores técnicos
-- Comparación entre múltiples activos digitales
+#### 🤖 Asistente Virtual Cripto Inteligente
+Nuestro chatbot especializado puede responder a consultas como:
+- Consultas de precios: _"¿Cómo está el Bitcoin hoy?"_
+- Recomendaciones: _"¿Qué criptomonedas recomiendas este mes?"_
+- Análisis técnico: _"¿Es buen momento para comprar Ethereum?"_
+- Volatilidad: _"¿Cuáles son las monedas más estables?"_
 
-#### 🤖 Motor de Recomendaciones con IA
-- **Selección inteligente** de criptomonedas con mayor potencial
-- Modelos predictivos para estimación de precios (1 - 3 días)
+#### 📊 Dashboard con Insights Generados por IA
+- **Recomendaciones automatizadas** basadas en:
+  - Análisis de tendencias
+  - Agrupamiento inteligente
+  - Identificación de patrones de mercado
+  
+  *Recomendaciones generadas automáticamente con modelos de machine learning*
 
-#### 💬 Asistente Virtual Cripto (Próximamente)
-- Chatbot especializado en:
-  - Análisis de criptomonedas específicas
-  - Estrategias de trading básicas
-- *Frontend completado - Integración con backend en progreso*
+#### 📈 Herramientas de Análisis
+- Visualización histórica interactiva
+- Comparación entre múltiples activos
 
+## 🖥 Demostración del Sistema
 
-## 🖥 Vista Previa
+### Interacciones con el Asistente Virtual
 
+1. **Consultas de Precio**  
+   ![Consulta de precio](./images/bot4.png)  
+   *El asistente proporciona valores actualizados con precisión*
 
-1. **Recomendaciones de IA**  
-   ![AI Insights](./images/insights%201.png)  
-   ![Pronosticos](./images/insights%202.png)
+2. **Recomendaciones Inteligentes**  
+   ![Recomendaciones](./images/bot1.png)  
+   *Sugerencias basadas en análisis técnico*
 
-2. **Prototipo Chatbot**  
-   ![Chat UI](./images/chat.png)  
-   *Vista preliminar del asistente virtual en desarrollo*
+3. **Análisis de Tendencias**  
+   ![Análisis](./images/bot3.png)  
+   *Predicciones de comportamiento de mercado a corto plazo*
 
+4. **Comparación de Volatilidad**  
+   ![Volatilidad](./images/bot2.png)  
+   *Identificación de activos estables vs. volátiles*
+
+### Dashboard de Recomendaciones IA
+![Dashboard IA](./images/insights%201.png)
+![Prediccion de precios](./images/insights%202.png) 
+*Resultados generados por nuestros modelos de inteligencia artificial mostrando:*
+- Criptomonedas con mayor potencial
+- Predicciones de precios
+
+## Tecnologías Clave
+- **Procesamiento de Lenguaje Natural** para comprensión de consultas
+- **Algoritmos K-Means** para agrupamiento de criptoactivos
+- **Visualización interactiva** con librerías modernas
+- **Pipeline de datos automatizado** para análisis en tiempo real
